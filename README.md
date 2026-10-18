@@ -63,3 +63,19 @@ curl -X PATCH -H "x-admin-key: $ADMIN_KEY" -H "Content-Type: application/json" \
 ## Before accepting real orders
 
 This is still an MVP, not a production launch. Product names, prices, images, ingredients, origin, expiry, stock and all claims are sample content and must be verified and replaced. Add a production database, HTTPS, robust customer sessions/password reset, rate limiting, CSRF protection, email delivery, backups, monitoring and a merchant-onboarded payment provider before accepting real orders at scale. The current checkout uses cash on delivery only.
+
+## Deploy the website to GitHub Pages
+
+The workflow in `.github/workflows/static.yml` publishes only the `dist/` folder, so GitHub Pages serves the storefront instead of the repository README.
+
+1. Push the workflow change to `main`.
+2. In GitHub, open **Settings → Pages**.
+3. Set **Source** to **GitHub Actions**.
+4. Open **Actions** and wait for **Deploy static content to Pages** to complete.
+5. Open the URL shown under the workflow’s `github-pages` environment.
+
+For this repository, the project-site URL will normally be:
+
+`https://senudajk.github.io/Crystal-Glow/`
+
+GitHub Pages hosts static files only. It cannot run `server.js`, Prisma, SQLite, customer login, stock validation, newsletter persistence, or order creation. Those backend features require a separate Node.js hosting service and a production database. The hosted GitHub Pages version is therefore the static storefront preview; keep using the local Express server for the full checkout MVP until the backend is deployed separately.

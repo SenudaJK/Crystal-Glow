@@ -35,6 +35,6 @@
     document.querySelector(".eyebrow").textContent = "A little home for your rituals";
     document.querySelector("h1").innerHTML = "Start your <em>ritual.</em>";
     document.querySelector(".auth-intro").textContent = "Create an account to keep your details close. You can always shop as a guest.";
-    document.querySelector(".auth-switch").innerHTML = 'Already have an account? <a href="/login">Sign in</a>';
+    document.querySelector(".auth-switch").innerHTML = 'Already have an account? <a href="./login.html">Sign in</a>';
   });
 })();

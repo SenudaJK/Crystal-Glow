@@ -1,4 +1,5 @@
 (function () {
+  if (window.location.hostname.endsWith("github.io")) return;
   const api = (url, options) => fetch(url, { headers: { "Content-Type": "application/json" }, ...options }).then(async response => {
     const body = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(body.error || "Something went wrong. Please try again.");
