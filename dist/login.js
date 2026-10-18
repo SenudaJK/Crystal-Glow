@@ -1,9 +1,11 @@
 (function () {
   const isStaticPages = window.location.hostname.endsWith("github.io");
+  const apiBase = window.CG_API_URL || "";
+  const hasBackend = !isStaticPages || Boolean(apiBase);
   const form = document.querySelector("#login-form");
   const message = document.querySelector("#auth-message");
   const setMessage = text => { message.textContent = text; };
-  const api = (url, options) => fetch(url, { headers: { "Content-Type": "application/json" }, ...options }).then(async response => {
+  const api = (url, options) => fetch(`${apiBase}${url}`, { credentials: "include", headers: { "Content-Type": "application/json" }, ...options }).then(async response => {
     const body = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(body.error || "Something went wrong. Please try again.");
     return body;
@@ -11,7 +13,7 @@
   let mode = "login";
   form.addEventListener("submit", async event => {
     event.preventDefault();
-    if (isStaticPages) {
+    if (!hasBackend) {
       setMessage("Online accounts are not connected on this static preview. Use the local app or deploy the backend to enable sign in.");
       return;
     }
@@ -23,10 +25,10 @@
       if (mode === "register") {
         await api("/api/auth/register", { method: "POST", body: JSON.stringify(data) });
         mode = "login";
-        window.location.href = "/login";
+        window.location.href = isStaticPages ? "./login.html" : "/login";
       } else {
         await api("/api/auth/login", { method: "POST", body: JSON.stringify(data) });
-        window.location.href = "/";
+        window.location.href = isStaticPages ? "./" : "/";
       }
     } catch (error) {
       setMessage(error.message);
@@ -40,7 +42,7 @@
     document.querySelector(".eyebrow").textContent = "A little home for your rituals";
     document.querySelector("h1").innerHTML = "Start your <em>ritual.</em>";
     document.querySelector(".auth-intro").textContent = "Create an account to keep your details close. You can always shop as a guest.";
-    if (isStaticPages) setMessage("Account creation requires the online backend and is not enabled on this static preview.");
+    if (!hasBackend) setMessage("Account creation requires the online backend and is not enabled on this static preview.");
     document.querySelector(".auth-switch").innerHTML = 'Already have an account? <a href="./login.html">Sign in</a>';
   });
 })();

@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: crystal-glow-api
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npx prisma generate && npx prisma db push && npm run db:seed
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://senudajk.github.io,http://localhost:4173
+      - key: NODE_ENV
+        value: production

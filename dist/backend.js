@@ -1,6 +1,8 @@
 (function () {
   const isStaticPages = window.location.hostname.endsWith("github.io");
-  const api = (url, options) => fetch(url, { headers: { "Content-Type": "application/json" }, ...options }).then(async response => {
+  const apiBase = window.CG_API_URL || "";
+  const hasBackend = !isStaticPages || Boolean(apiBase);
+  const api = (url, options) => fetch(`${apiBase}${url}`, { credentials: "include", headers: { "Content-Type": "application/json" }, ...options }).then(async response => {
     const body = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(body.error || "Something went wrong. Please try again.");
     return body;
@@ -81,8 +83,8 @@
       }
     });
   };
-  if (!isStaticPages) replaceHandler("#checkout-button", "click", checkout);
-  if (!isStaticPages) replaceHandler("#newsletter-form", "submit", async event => {
+  if (hasBackend) replaceHandler("#checkout-button", "click", checkout);
+  if (hasBackend) replaceHandler("#newsletter-form", "submit", async event => {
     event.preventDefault();
     const form = event.currentTarget;
     try {
@@ -94,7 +96,7 @@
     }
   });
   replaceElement("#account-trigger");
-  if (isStaticPages) {
+  if (!hasBackend) {
     updateAccountButton(null);
     document.querySelector("#account-trigger").onclick = () => { window.location.href = "./login.html"; };
   } else {
@@ -107,7 +109,7 @@
     footerNote.querySelector("b").textContent = "Crystal Glow support";
     footerNote.querySelector("p").textContent = "Guest checkout and cash on delivery are available. Store policies and support details should be finalized before launch.";
   }
-  if (!isStaticPages) api("/api/products").then(serverProducts => {
+  if (hasBackend) api("/api/products").then(serverProducts => {
     const byId = new Map(serverProducts.map(product => [product.id, product]));
     products.forEach(product => {
       const serverProduct = byId.get(product.id);

@@ -1,6 +1,8 @@
 const express = require("express");
 const path = require("path");
 const crypto = require("crypto");
+const rateLimit = require("express-rate-limit");
+const helmet = require("helmet");
 const { PrismaClient } = require("@prisma/client");
 
 const app = express();
@@ -8,9 +10,25 @@ const prisma = new PrismaClient();
 const port = Number(process.env.PORT || 4173);
 const freeDeliveryThreshold = 5000;
 const deliveryFee = 350;
+const allowedOrigins = new Set((process.env.ALLOWED_ORIGINS || "http://localhost:4173").split(",").map(origin => origin.trim()).filter(Boolean));
 
+app.set("trust proxy", 1);
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use((req, res, next) => {
+  const origin = req.get("origin");
+  if (origin && allowedOrigins.has(origin)) {
+    res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,OPTIONS");
+  }
+  if (req.method === "OPTIONS") return res.sendStatus(origin && allowedOrigins.has(origin) ? 204 : 403);
+  next();
+});
 app.use(express.json({ limit: "20kb" }));
 app.use(express.static(path.join(__dirname, "dist")));
+app.use("/api", rateLimit({ windowMs: 15 * 60 * 1000, limit: 120, standardHeaders: "draft-8", legacyHeaders: false }));
 
 const validEmail = value => typeof value === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const positiveInteger = value => Number.isInteger(value) && value > 0;
@@ -23,8 +41,9 @@ const parseCookies = header => Object.fromEntries((header || "").split(";").filt
   const index = part.indexOf("=");
   return [part.slice(0, index).trim(), decodeURIComponent(part.slice(index + 1).trim())];
 }));
-const setSessionCookie = (res, token) => res.setHeader("Set-Cookie", `${sessionCookie}=${encodeURIComponent(token)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${sessionMaxAge / 1000}${process.env.NODE_ENV === "production" ? "; Secure" : ""}`);
-const clearSessionCookie = res => res.setHeader("Set-Cookie", `${sessionCookie}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`);
+const cookieAttributes = () => `HttpOnly; SameSite=${process.env.NODE_ENV === "production" ? "None" : "Lax"}; Path=/; Max-Age=${sessionMaxAge / 1000}${process.env.NODE_ENV === "production" ? "; Secure" : ""}`;
+const setSessionCookie = (res, token) => res.setHeader("Set-Cookie", `${sessionCookie}=${encodeURIComponent(token)}; ${cookieAttributes()}`);
+const clearSessionCookie = res => res.setHeader("Set-Cookie", `${sessionCookie}=; HttpOnly; SameSite=${process.env.NODE_ENV === "production" ? "None" : "Lax"}; Path=/; Max-Age=0${process.env.NODE_ENV === "production" ? "; Secure" : ""}`);
 const sessionIdFromRequest = req => {
   const token = parseCookies(req.headers.cookie)[sessionCookie];
   return token ? crypto.createHash("sha256").update(token).digest("hex") : null;
@@ -36,6 +55,7 @@ const authenticatedCustomer = async req => {
   return session && session.expiresAt > new Date() ? session.customer : null;
 };
 
+app.get("/health", (_req, res) => res.json({ ok: true }));
 app.get("/api/products", async (_req, res) => {
   res.json(await prisma.product.findMany({ where: { active: true }, orderBy: { id: "asc" } }));
 });
@@ -186,4 +206,8 @@ app.patch("/api/admin/products/:id", adminOnly, async (req, res) => {
 
 app.get("/login", (_req, res) => res.sendFile(path.join(__dirname, "dist", "login.html")));
 app.use((_req, res) => res.sendFile(path.join(__dirname, "dist", "index.html")));
+app.use((error, _req, res, _next) => {
+  console.error(error);
+  res.status(500).json({ error: "The server could not complete that request." });
+});
 app.listen(port, () => console.log(`Crystal Glow running at http://localhost:${port}`));
