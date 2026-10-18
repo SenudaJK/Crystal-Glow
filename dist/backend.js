@@ -1,5 +1,5 @@
 (function () {
-  if (window.location.hostname.endsWith("github.io")) return;
+  const isStaticPages = window.location.hostname.endsWith("github.io");
   const api = (url, options) => fetch(url, { headers: { "Content-Type": "application/json" }, ...options }).then(async response => {
     const body = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(body.error || "Something went wrong. Please try again.");
@@ -81,8 +81,8 @@
       }
     });
   };
-  replaceHandler("#checkout-button", "click", checkout);
-  replaceHandler("#newsletter-form", "submit", async event => {
+  if (!isStaticPages) replaceHandler("#checkout-button", "click", checkout);
+  if (!isStaticPages) replaceHandler("#newsletter-form", "submit", async event => {
     event.preventDefault();
     const form = event.currentTarget;
     try {
@@ -94,7 +94,12 @@
     }
   });
   replaceElement("#account-trigger");
-  api("/api/auth/me").then(({ customer }) => { signedInCustomer = customer; updateAccountButton(customer); }).catch(() => updateAccountButton(null));
+  if (isStaticPages) {
+    updateAccountButton(null);
+    document.querySelector("#account-trigger").onclick = () => { window.location.href = "./login.html"; };
+  } else {
+    api("/api/auth/me").then(({ customer }) => { signedInCustomer = customer; updateAccountButton(customer); }).catch(() => updateAccountButton(null));
+  }
   const trustItems = document.querySelectorAll(".trust-strip span");
   if (trustItems.length) trustItems[trustItems.length - 1].textContent = "Cash on delivery checkout";
   const footerNote = document.querySelector(".footer-contact");
@@ -102,7 +107,7 @@
     footerNote.querySelector("b").textContent = "Crystal Glow support";
     footerNote.querySelector("p").textContent = "Guest checkout and cash on delivery are available. Store policies and support details should be finalized before launch.";
   }
-  api("/api/products").then(serverProducts => {
+  if (!isStaticPages) api("/api/products").then(serverProducts => {
     const byId = new Map(serverProducts.map(product => [product.id, product]));
     products.forEach(product => {
       const serverProduct = byId.get(product.id);

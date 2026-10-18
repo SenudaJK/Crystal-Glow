@@ -1,4 +1,5 @@
 (function () {
+  const isStaticPages = window.location.hostname.endsWith("github.io");
   const form = document.querySelector("#login-form");
   const message = document.querySelector("#auth-message");
   const setMessage = text => { message.textContent = text; };
@@ -10,6 +11,10 @@
   let mode = "login";
   form.addEventListener("submit", async event => {
     event.preventDefault();
+    if (isStaticPages) {
+      setMessage("Online accounts are not connected on this static preview. Use the local app or deploy the backend to enable sign in.");
+      return;
+    }
     const button = form.querySelector("button");
     button.disabled = true;
     setMessage("");
@@ -35,6 +40,7 @@
     document.querySelector(".eyebrow").textContent = "A little home for your rituals";
     document.querySelector("h1").innerHTML = "Start your <em>ritual.</em>";
     document.querySelector(".auth-intro").textContent = "Create an account to keep your details close. You can always shop as a guest.";
+    if (isStaticPages) setMessage("Account creation requires the online backend and is not enabled on this static preview.");
     document.querySelector(".auth-switch").innerHTML = 'Already have an account? <a href="./login.html">Sign in</a>';
   });
 })();

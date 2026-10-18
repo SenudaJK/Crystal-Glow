@@ -81,3 +81,5 @@ For this repository, the project-site URL is:
 If GitHub Pages is still configured as **Deploy from a branch**, the root `index.html` redirects to the storefront in `dist/`. The recommended setting remains **GitHub Actions**, which publishes `dist/` directly.
 
 GitHub Pages hosts static files only. It cannot run `server.js`, Prisma, SQLite, customer login, stock validation, newsletter persistence, or order creation. Those backend features require a separate Node.js hosting service and a production database. The hosted GitHub Pages version is therefore the static storefront preview; keep using the local Express server for the full checkout MVP until the backend is deployed separately.
+
+The hosted version still includes the account button and [login.html](./dist/login.html) page, but sign-in and registration remain disabled there until the backend is deployed. The local version provides the complete account flow.
