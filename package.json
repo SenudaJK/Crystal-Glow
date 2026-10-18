@@ -1,0 +1,23 @@
+{
+  "name": "crystal-glow-storefront",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Crystal Glow storefront and order-processing backend",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "db:push": "prisma db push",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "prisma": "6.19.3"
+  }
+}
