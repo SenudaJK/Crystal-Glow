@@ -45,7 +45,7 @@
       ? `<span class="account-initials">${initialsFor(customer.name)}</span>`
       : '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c.7-3.2 3.5-5.3 7.2-5.3s6.5 2.1 7.2 5.3"/></svg>';
     button.setAttribute("aria-label", customer ? `Account for ${customer.name}` : "Sign in to your account");
-    button.onclick = () => customer ? showAccountMenu(customer) : (window.location.href = "/login");
+    button.onclick = () => customer ? showAccountMenu(customer) : (window.location.href = isStaticPages ? "./login.html" : "/login");
   };
   const checkout = () => {
     const items = JSON.parse(localStorage.getItem("cg-cart") || "[]");
